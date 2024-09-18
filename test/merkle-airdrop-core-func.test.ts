@@ -2,15 +2,18 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { MerkleTree } from "merkletreejs";
 import keccak256 from "keccak256";
-import { setBalance, impersonateAccount } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import {
+  setBalance,
+  impersonateAccount,
+} from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 describe("MerkleAirdropCoreFuncsTest", function () {
   let merkleAirdrop: any,
     token: any,
     owner: any,
-    addr1 = '0xe2A83b15FC300D8457eB9E176f98d92a8FF40a49',
-    addr2 = '0x6b4DF334368b09f87B3722449703060EEf284126',
-    addr3 = '0x6b4DF334368b09f87B3722449703060EEf284126',
+    addr1 = "0xe2A83b15FC300D8457eB9E176f98d92a8FF40a49",
+    addr2 = "0x6b4DF334368b09f87B3722449703060EEf284126",
+    addr3 = "0x6b4DF334368b09f87B3722449703060EEf284126",
     addrWithoutNFT: any;
 
   let merkleRoot, merkleTree: any;
@@ -53,7 +56,7 @@ describe("MerkleAirdropCoreFuncsTest", function () {
     merkleAirdrop = await MerkleAirdropFactory.deploy(token, `0x${merkleRoot}`);
 
     // Transfer tokens to contract
-    await token.transfer(merkleAirdrop, 100000);
+    await token.transfer(merkleAirdrop, 35000);
   });
 
   it("Should allow the owner to deposit tokens into the contract", async function () {
@@ -65,10 +68,7 @@ describe("MerkleAirdropCoreFuncsTest", function () {
 
   it("Should allow eligible users with bayc nft to claim their tokens", async function () {
     const leaf = keccak256(
-      ethers.solidityPacked(
-        ["address", "uint256"],
-        [addr1, 30000]
-      )
+      ethers.solidityPacked(["address", "uint256"], [addr1, 30000])
     );
     const proof = merkleTree.getHexProof(leaf);
 
@@ -76,14 +76,12 @@ describe("MerkleAirdropCoreFuncsTest", function () {
     const impersonatedSigner = await ethers.getSigner(addr1);
 
     await expect(
-      merkleAirdrop
-        .connect(impersonatedSigner)
-        .claimReward(30000, proof)
+      merkleAirdrop.connect(impersonatedSigner).claimReward(30000, proof)
     ).to.emit(merkleAirdrop, "UserClaimedTokens");
   });
 
   it("Should not allow a user without the BAYC NFT to claim tokens", async function () {
-    const user = users[users.length-1];
+    const user = users[users.length - 1];
     const leaf = keccak256(
       ethers.solidityPacked(["address", "uint256"], [user.address, user.amount])
     );
@@ -91,7 +89,27 @@ describe("MerkleAirdropCoreFuncsTest", function () {
 
     await expect(
       merkleAirdrop.connect(addrWithoutNFT).claimReward(user.amount, proof)
-    ).to.be.revertedWithCustomError(merkleAirdrop, "YouDoNotOwnRequiredBaycNft");
+    ).to.be.revertedWithCustomError(
+      merkleAirdrop,
+      "YouDoNotOwnRequiredBaycNft"
+    );
+  });
+
+  it("Should revert if insufficient funds in the account", async function () {
+    const leaf = keccak256(
+      ethers.solidityPacked(["address", "uint256"], [addr2, 10000])
+    );
+    const proof = merkleTree.getHexProof(leaf);
+
+    await impersonateAccount(addr2);
+    const impersonatedSigner = await ethers.getSigner(addr2);
+
+    await expect(
+      merkleAirdrop.connect(impersonatedSigner).claimReward(10000, proof)
+    ).to.be.revertedWithCustomError(
+      merkleAirdrop,
+      "InsufficientFundsPleaseTryAgain"
+    );
   });
 
   it("Should not allow a user to claim tokens more than once", async function () {
@@ -124,7 +142,9 @@ describe("MerkleAirdropCoreFuncsTest", function () {
     await impersonateAccount(addr2);
     const impersonatedSigner = await ethers.getSigner(addr2);
 
-    await expect(merkleAirdrop.connect(impersonatedSigner).withdrawRemainingTokens()).to.be.revertedWithCustomError(merkleAirdrop, "YouAreNotTheOwner");
+    await expect(
+      merkleAirdrop.connect(impersonatedSigner).withdrawRemainingTokens()
+    ).to.be.revertedWithCustomError(merkleAirdrop, "YouAreNotTheOwner");
   });
 
   it("Should withdraw remaining tokens to owners account", async function () {
@@ -137,11 +157,13 @@ describe("MerkleAirdropCoreFuncsTest", function () {
 
     expect(balanceAfter).to.equal(balanceBefore + contractBalance);
   });
-  
+
   it("Should revert if tries token balance of contract is finished", async function () {
-    await expect(merkleAirdrop.withdrawRemainingTokens()).to.be.revertedWithCustomError(merkleAirdrop, "NoTokensRemainingToWithdraw");
+    await expect(
+      merkleAirdrop.withdrawRemainingTokens()
+    ).to.be.revertedWithCustomError(
+      merkleAirdrop,
+      "NoTokensRemainingToWithdraw"
+    );
   });
-
-  
-
 });
