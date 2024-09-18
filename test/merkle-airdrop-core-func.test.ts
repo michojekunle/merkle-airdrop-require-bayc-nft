@@ -5,6 +5,7 @@ import keccak256 from "keccak256";
 import {
   setBalance,
   impersonateAccount,
+  loadFixture,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 describe("MerkleAirdropCoreFuncsTest", function () {
@@ -64,6 +65,13 @@ describe("MerkleAirdropCoreFuncsTest", function () {
     await expect(merkleAirdrop.depositIntoContract(500))
       .to.emit(merkleAirdrop, "DepositIntoContractSuccessful")
       .withArgs(owner.address, 500);
+  });
+
+  it("Should revert if the owner doesn't have enough tokens to deposit into the contract", async function () {
+    const amountToDeposit = ethers.parseUnits('50000000', 18)
+    await token.connect(owner).approve(merkleAirdrop, amountToDeposit);
+    await expect(merkleAirdrop.depositIntoContract(amountToDeposit))
+      .to.be.revertedWithCustomError(merkleAirdrop, "InsufficientTokenAmountFromSender");
   });
 
   it("Should allow eligible users with bayc nft to claim their tokens", async function () {
@@ -156,6 +164,22 @@ describe("MerkleAirdropCoreFuncsTest", function () {
     const balanceAfter = await token.balanceOf(owner);
 
     expect(balanceAfter).to.equal(balanceBefore + contractBalance);
+  });
+
+  
+  it("Should update merkle root", async function () {
+
+    const signer = await ethers.getSigner(addr2);
+    let newMerkleRoot = `0x604615d816d1f7289719e87ac68271b764181416d4057699d7f3c8250c674e19`;
+
+    await expect(merkleAirdrop.connect(signer).updateMerkleRoot(newMerkleRoot)).to.be.revertedWithCustomError(merkleAirdrop, "YouAreNotTheOwner");
+  });
+
+  it("Should update merkle root", async function () {
+    let newMerkleRoot = `0x604615d816d1f7289719e87ac68271b764181416d4057699d7f3c8250c674e19`
+    await merkleAirdrop.updateMerkleRoot(newMerkleRoot);
+
+    expect(await merkleAirdrop.merkleRootHash()).to.be.equal(newMerkleRoot);
   });
 
   it("Should revert if tries token balance of contract is finished", async function () {

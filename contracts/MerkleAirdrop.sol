@@ -58,7 +58,7 @@ contract MerkleAirdrop {
         emit DepositIntoContractSuccessful(msg.sender, _amount);
     }
 
-    function UpdateMerkleRoot(bytes32 _new_merkle_root) external {
+    function updateMerkleRoot(bytes32 _new_merkle_root) external {
         // checks
         _onlyOwner();
 
