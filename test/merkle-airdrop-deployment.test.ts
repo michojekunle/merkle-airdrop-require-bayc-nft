@@ -59,7 +59,7 @@ describe("MerkleAirdrop", function () {
         await loadFixture(deployMerkleAirdrop);
 
       const mintAmount = ethers.parseUnits("100");
-      await expect(token.connect(otherAccount).mint(mintAmount)).to.be.revertedWith("you're not the owner");
+      await expect(token.connect(otherAccount).mint(mintAmount)).to.be.revertedWith("you are not owner");
     });
   });
 });
