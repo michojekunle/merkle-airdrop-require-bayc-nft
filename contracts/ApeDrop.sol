@@ -13,6 +13,6 @@ contract ApeDrop is ERC20("ApeDrop", "APD") {
 
     function mint(uint _amount) external {
         require(msg.sender == owner, "you are not owner");
-        _mint(msg.sender, _amount * 1e18);
+        _mint(msg.sender, _amount);
     }
 }

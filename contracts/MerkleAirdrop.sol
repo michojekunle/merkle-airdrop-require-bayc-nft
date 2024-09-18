@@ -66,7 +66,7 @@ contract MerkleAirdrop {
         merkleRootHash = _new_merkle_root;
     }
 
-    function WithdrawRemainingTokens() external {
+    function withdrawRemainingTokens() external {
         // checks only owner
         _onlyOwner();
 
@@ -76,7 +76,7 @@ contract MerkleAirdrop {
         );
         if (_contractBalance <= 0) revert NoTokensRemainingToWithdraw();
 
-        // withdraw remaining tokens to onwwers account
+        // withdraw remaining tokens to owners account
         if (!IERC20(tokenAddress).transfer(owner, _contractBalance))
             revert WithdrawalFailed();
     }

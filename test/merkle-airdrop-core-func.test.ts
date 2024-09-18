@@ -2,7 +2,6 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { MerkleTree } from "merkletreejs";
 import keccak256 from "keccak256";
-import helpers from "@nomicfoundation/hardhat-network-helpers";
 import { setBalance, impersonateAccount } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 describe("MerkleAirdropCoreFuncsTest", function () {
@@ -120,4 +119,29 @@ describe("MerkleAirdropCoreFuncsTest", function () {
       merkleAirdrop.connect(impersonatedSigner).claimReward(300, invalidProof)
     ).to.be.revertedWithCustomError(merkleAirdrop, "SorryYouAreNotEligible");
   });
+
+  it("Should revert if a non-owner tries to withdraw remaining tokens", async function () {
+    await impersonateAccount(addr2);
+    const impersonatedSigner = await ethers.getSigner(addr2);
+
+    await expect(merkleAirdrop.connect(impersonatedSigner).withdrawRemainingTokens()).to.be.revertedWithCustomError(merkleAirdrop, "YouAreNotTheOwner");
+  });
+
+  it("Should withdraw remaining tokens to owners account", async function () {
+    const balanceBefore = await token.balanceOf(owner);
+    const contractBalance = await token.balanceOf(merkleAirdrop.getAddress());
+
+    await merkleAirdrop.withdrawRemainingTokens();
+
+    const balanceAfter = await token.balanceOf(owner);
+
+    expect(balanceAfter).to.equal(balanceBefore + contractBalance);
+  });
+  
+  it("Should revert if tries token balance of contract is finished", async function () {
+    await expect(merkleAirdrop.withdrawRemainingTokens()).to.be.revertedWithCustomError(merkleAirdrop, "NoTokensRemainingToWithdraw");
+  });
+
+  
+
 });

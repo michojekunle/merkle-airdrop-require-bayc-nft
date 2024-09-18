@@ -21,7 +21,7 @@ describe("MerkleAirdrop", function () {
 
     const { token } = await loadFixture(deployToken);
     const merkle_root_hash =
-      "0xb166664d02b116400f8e4e5c8f5020af1b130fa6b1f91d0dae6139c8754e45dd";
+      "0x604615d816d1f7289719e87ac68271b764181416d4057699d7f3c8250c674e19";
 
     const MerkleAirdrop = await ethers.getContractFactory("MerkleAirdrop");
     const merkleAirdrop = await MerkleAirdrop.deploy(token, merkle_root_hash);
@@ -37,6 +37,29 @@ describe("MerkleAirdrop", function () {
       expect(await merkleAirdrop.owner()).to.equal(owner);
       expect(await merkleAirdrop.tokenAddress()).to.equal(token);
       expect(await merkleAirdrop.merkleRootHash()).to.equal(merkle_root_hash);
+    });
+
+    it("should mint new tokens to owners address", async function () {
+      const { merkleAirdrop, owner, token, merkle_root_hash } =
+        await loadFixture(deployMerkleAirdrop);
+
+      const balancebefore = await token.balanceOf(owner);
+
+      const mintAmount = ethers.parseUnits("100");
+
+      await token.mint(mintAmount);
+
+      const balanceAfter = await token.balanceOf(owner);
+
+      expect(balanceAfter).to.equal(balancebefore + mintAmount);
+    });
+
+    it("should revert if non-owner calls mint new tokens to owners address", async function () {
+      const { otherAccount, token } =
+        await loadFixture(deployMerkleAirdrop);
+
+      const mintAmount = ethers.parseUnits("100");
+      await expect(token.connect(otherAccount).mint(mintAmount)).to.be.revertedWith("you're not the owner");
     });
   });
 });
