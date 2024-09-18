@@ -22,14 +22,10 @@ This is a Merkle Airdrop smart contract where only users who hold a **BoredApeYa
 - **Merkle Root Verification**: Uses Merkle proofs to ensure the claimant is part of the eligible addresses.
 - **Unit Tests**: Written to test the claim function and verify its correct behavior under various conditions.
 
----
-
 ## Prerequisites
 
 - **Node.js** (for running the local development environment)
 - **Hardhat** (for local Ethereum blockchain and contract deployment)
-
----
 
 ## Installation
 
@@ -112,7 +108,7 @@ INFURA_ID=
 Run the following command to execute the tests:
 
 ```
-npx harrdhat test
+npx hardhat test
 ```
 
 ## License
