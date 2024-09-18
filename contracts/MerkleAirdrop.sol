@@ -32,7 +32,6 @@ contract MerkleAirdrop {
     error InsufficientTokenAmountFromSender();
     error InsufficientFundsPleaseTryAgain();
     error NoTokensRemainingToWithdraw();
-    error WithdrawalFailed();
     error YouDoNotOwnRequiredBaycNft();
 
     // events
@@ -77,8 +76,7 @@ contract MerkleAirdrop {
         if (_contractBalance <= 0) revert NoTokensRemainingToWithdraw();
 
         // withdraw remaining tokens to owners account
-        if (!IERC20(tokenAddress).transfer(owner, _contractBalance))
-            revert WithdrawalFailed();
+        IERC20(tokenAddress).transfer(owner, _contractBalance);
     }
 
     function claimReward(
@@ -116,8 +114,7 @@ contract MerkleAirdrop {
             revert InsufficientFundsPleaseTryAgain();
 
         // check it transfer funtion goes through else revert claim failed
-        if (!IERC20(tokenAddress).transfer(_to, _amount))
-            revert ClaimingFailed();
+        !IERC20(tokenAddress).transfer(_to, _amount);
     }
 
     function _onlyOwner() private view {
